@@ -1,5 +1,6 @@
 package com.example.acosgun.tcp_nfc_ui;
 
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
@@ -12,16 +13,17 @@ import android.view.View;
 import android.widget.Button;
 
 
-public class MainActivity extends ActionBarActivity {
+
+public class MainActivity extends ActionBarActivity implements CardReaderFragment.NfcReaderInputListener {
 
     private static final String TAG= "MainActivity";
     private TCPClient  tcp_client;
 
-    private static final int PORT = 45454;
-    private static final String IP_ADDRESS= "192.168.0.127";
+    private static final int PORT = 4545;
+    private static final String IP_ADDRESS= "192.168.1.8";
     //private static final String IP_ADDRESS= "127.0.0.1";
 
-    public Handler handler;
+    public Handler tcp_handler;
     Thread mThread;
 
     @Override
@@ -30,7 +32,18 @@ public class MainActivity extends ActionBarActivity {
         setContentView(R.layout.activity_main);
 
         this.setConnectButtonColor(Color.RED);
-        handler = new Handler() {
+
+
+        if (savedInstanceState == null) {
+            //FragmentManager fragmentManager = getFragmentManager();
+            android.support.v4.app.FragmentManager fragmentManager = getSupportFragmentManager();
+            android.support.v4.app.FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+            CardReaderFragment cardFragment = new CardReaderFragment();
+            fragmentTransaction.add(cardFragment,TAG);
+            fragmentTransaction.commit();
+        }
+
+        tcp_handler = new Handler() {
           @Override
           public void handleMessage(Message msg) {
               //Log.d(TAG, "handleMessage: " + msg);
@@ -50,7 +63,7 @@ public class MainActivity extends ActionBarActivity {
         };
 
 
-        tcp_client = new TCPClient(handler, IP_ADDRESS, PORT);
+        tcp_client = new TCPClient(tcp_handler, IP_ADDRESS, PORT);
         mThread = new Thread(tcp_client);
         mThread.start();
 
@@ -62,20 +75,21 @@ public class MainActivity extends ActionBarActivity {
 
         runOnUiThread(new Runnable() {
 
-        @Override
-        public void run() {
-            Button connect_button = (Button) findViewById(R.id.connect_button);
-            connect_button.setBackgroundColor(color);
-        }
+            @Override
+            public void run() {
+                Button connect_button = (Button) findViewById(R.id.connect_button);
+                connect_button.setBackgroundColor(color);
+            }
 
         });
     }
 
-    public void onClickSend (View view) {
+    private boolean sendGuideCommand () {
         if(!tcp_client.isRunning())
-            return;
+            return false;
         String str = "g";
         tcp_client.sendMessage(str);
+            return true;
     }
 
     public void onClickConnect (View view) {
@@ -88,9 +102,115 @@ public class MainActivity extends ActionBarActivity {
         } else {
             tcp_client.disconnect();
         }
-
-
     }
 
+    public void elevatorButtonClicked(View v){
+        int floorNum;
+
+        switch(v.getId()) {
+            case R.id.button1:
+                floorNum = 1;
+                break;
+            case R.id.button2:
+                floorNum = 2;
+                break;
+            case R.id.button3:
+                floorNum = 3;
+                break;
+            case R.id.button4:
+                floorNum = 4;
+                break;
+            case R.id.button5:
+                floorNum = 5;
+                break;
+            case R.id.button6:
+                floorNum = 6;
+                break;
+            case R.id.button7:
+                floorNum = 7;
+                break;
+            case R.id.button8:
+                floorNum = 8;
+                break;
+            case R.id.button9:
+                floorNum = 9;
+                break;
+            case R.id.button10:
+                floorNum = 10;
+                break;
+            case R.id.button11:
+                floorNum = 11;
+                break;
+            case R.id.button12:
+                floorNum = 12;
+                break;
+            case R.id.button13:
+                floorNum = 13;
+                break;
+            case R.id.button14:
+                floorNum = 14;
+                break;
+            case R.id.button15:
+                floorNum = 15;
+                break;
+            case R.id.button16:
+                floorNum = 16;
+                break;
+            default:
+                floorNum = 0;
+                break;
+        }
+
+
+
+        Intent intent = createElevatorIntent("Guest",floorNum, 4, getElevNum(floorNum), true);
+        int requestCode = 1;
+        startActivityForResult(intent, requestCode);
+        overridePendingTransition(0,0);
+    }
+
+    protected void onActivityResult (int requestCode, int resultCode, Intent data) {
+        // Collect data from the intent and use it
+        if (resultCode == RESULT_CANCELED) {
+            Log.i(TAG,"RESULT_CANCELED");
+        } else if (resultCode == RESULT_OK) {
+            Log.i(TAG,"RESULT_OK");
+            sendGuideCommand();
+        }
+    }
+
+    private Intent createElevatorIntent(String str, int floorNum, int duration, int elevNum, boolean guide_visible)
+    {
+        Intent intent = new Intent(this, CalledElevatorActivity.class);
+        intent.putExtra("name",str);
+        intent.putExtra("floor", floorNum);
+        intent.putExtra("duration",duration);
+        intent.putExtra("elevNum",elevNum);
+        intent.putExtra("show_guide", guide_visible);
+        return intent;
+    }
+
+    public int getElevNum(int floorNum) {
+        int elev_num;
+        if(floorNum >= 1 && floorNum <= 4) {
+            elev_num = 1;
+        } else if (floorNum >= 5 && floorNum <= 8) {
+            elev_num = 2;
+        } else if (floorNum >= 9 && floorNum <= 12) {
+            elev_num = 3;
+        } else {
+            elev_num = 4;
+        }
+        return elev_num;
+    }
+
+    @Override
+    public void nfcCallback(int floor, String name) {
+        Log.i(TAG,"nfcCallback");
+        Intent intent = createElevatorIntent(name,floor, 3, getElevNum(floor) , false);
+        int requestCode = 1;
+        startActivityForResult(intent, requestCode);
+        overridePendingTransition(0,0);
+    }
 
 }

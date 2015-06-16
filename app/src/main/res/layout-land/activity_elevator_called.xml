@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:weightSum="1">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:id="@+id/elevatorInfoTextView"
+        android:layout_gravity="center_horizontal"
+        android:layout_weight="0.97"
+        android:textSize="55dp"
+        android:text="asd"
+        android:gravity="center" />
+
+    <Button
+        android:onClick="guideButtonClicked"
+        android:layout_width="match_parent"
+        android:layout_height="160dp"
+        android:text="Guide Me"
+        android:id="@+id/guide_button"
+        android:textSize="75dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true" />
+</RelativeLayout>

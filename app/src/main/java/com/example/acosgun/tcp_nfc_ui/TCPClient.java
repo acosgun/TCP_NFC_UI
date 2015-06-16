@@ -47,12 +47,6 @@ public class TCPClient implements Runnable{
         }
     }
 
-    public void stopClient(){
-        Log.d(TAG, "Client stopped!");
-        mRun = false;
-        //mMainActivity.tcpInputCallback(false, "");
-    }
-
     public boolean disconnect() {
         try {
         socket.close();
