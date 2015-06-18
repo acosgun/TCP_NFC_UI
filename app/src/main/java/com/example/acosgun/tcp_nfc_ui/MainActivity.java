@@ -20,11 +20,12 @@ public class MainActivity extends ActionBarActivity implements CardReaderFragmen
     private TCPClient  tcp_client;
 
     private static final int PORT = 4545;
-    private static final String IP_ADDRESS= "192.168.1.8";
+    private static final String IP_ADDRESS= "192.168.0.127";
     //private static final String IP_ADDRESS= "127.0.0.1";
 
     public Handler tcp_handler;
     Thread mThread;
+    int last_elev_number;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,10 +85,9 @@ public class MainActivity extends ActionBarActivity implements CardReaderFragmen
         });
     }
 
-    private boolean sendGuideCommand () {
+    private boolean sendGuideCommand (String str) {
         if(!tcp_client.isRunning())
             return false;
-        String str = "g";
         tcp_client.sendMessage(str);
             return true;
     }
@@ -102,6 +102,14 @@ public class MainActivity extends ActionBarActivity implements CardReaderFragmen
         } else {
             tcp_client.disconnect();
         }
+    }
+
+    public void stopButtonClicked(View view) {
+        sendGuideCommand("s");
+    }
+
+    public void baseButtonClicked(View view) {
+        sendGuideCommand("b");
     }
 
     public void elevatorButtonClicked(View v){
@@ -164,6 +172,7 @@ public class MainActivity extends ActionBarActivity implements CardReaderFragmen
 
 
         Intent intent = createElevatorIntent("Guest",floorNum, 4, getElevNum(floorNum), true);
+        last_elev_number = getElevNum(floorNum) - 1;
         int requestCode = 1;
         startActivityForResult(intent, requestCode);
         overridePendingTransition(0,0);
@@ -175,7 +184,7 @@ public class MainActivity extends ActionBarActivity implements CardReaderFragmen
             Log.i(TAG,"RESULT_CANCELED");
         } else if (resultCode == RESULT_OK) {
             Log.i(TAG,"RESULT_OK");
-            sendGuideCommand();
+            sendGuideCommand("g"+last_elev_number);
         }
     }
 
