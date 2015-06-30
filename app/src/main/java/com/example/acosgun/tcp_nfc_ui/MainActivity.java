@@ -1,26 +1,44 @@
 package com.example.acosgun.tcp_nfc_ui;
 
+import android.app.Activity;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.StrictMode;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-
-
+import android.widget.EditText;
+import android.widget.TextView;
+import android.support.v7.app.ActionBar.Tab;
+import android.support.v7.app.ActionBar.TabListener;
 
 public class MainActivity extends ActionBarActivity implements CardReaderFragment.NfcReaderInputListener {
 
     private static final String TAG= "MainActivity";
+    //private final Activity mActivity;
+
+    private Menu mMenu;
+    private Fragment mSettingsFragment;
+
     private TCPClient  tcp_client;
 
     private static final int PORT = 4545;
-    private static final String IP_ADDRESS= "192.168.0.127";
+    private String IP_ADDRESS= "192.168.0.127";
     //private static final String IP_ADDRESS= "127.0.0.1";
 
     public Handler tcp_handler;
@@ -32,8 +50,60 @@ public class MainActivity extends ActionBarActivity implements CardReaderFragmen
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+
+
+        ActionBar mActionBar = getSupportActionBar();
+        mActionBar.setDisplayShowTitleEnabled(false);
+        mActionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
+
+        LayoutInflater mInflater = LayoutInflater.from(this);
+        View mCustomView = mInflater.inflate(R.layout.custom_actionbar, null);
+        mActionBar.setCustomView(mCustomView);
+        mActionBar.setDisplayShowCustomEnabled(true);
+
+
+
+
         this.setConnectButtonColor(Color.RED);
 
+        Button stopRobotButton= (Button) findViewById(R.id.stopRobotButton);
+        stopRobotButton.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View view) {
+                onClickStopRobot();
+            }
+        });
+
+        Button baseButton= (Button) findViewById(R.id.baseButton);
+        baseButton.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View view) {
+                onClickBase();
+            }
+        });
+
+        Button followButton= (Button) findViewById(R.id.followButton);
+        followButton.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View view) {
+                onClickFollow();
+            }
+        });
+
+        Button connectButton= (Button) findViewById(R.id.connect_button);
+        connectButton.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View view) {
+                onClickConnect();
+            }
+        });
+
+
+        setStatusString("N/A");
 
         if (savedInstanceState == null) {
             //FragmentManager fragmentManager = getFragmentManager();
@@ -70,6 +140,80 @@ public class MainActivity extends ActionBarActivity implements CardReaderFragmen
 
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
+
+
+
+    }
+
+
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the mMenu items for use in the action bar
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_main, menu);
+
+        this.mMenu = menu;
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle item selection
+        switch (item.getItemId()) {
+            case R.id.action_settings:
+                onClickSettings();
+                return true;
+            case R.id.action_main_menu:
+                onClickMainMenu();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+    public void onClickSettings () {
+        Log.i(TAG,"onClickSettings");
+        setStatusString("onClickSettings");
+        setContentView(R.layout.activity_setup);
+
+
+        EditText ipEditText= (EditText) findViewById(R.id.ip_editText);
+        ipEditText.addTextChangedListener(new TextWatcher() {
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                setStatusString("afterTextChanged");
+            }
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start,
+                                          int count, int after) {
+                setStatusString("beforeTextChanged");
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start,
+                                      int before, int count) {
+                setStatusString("onTextChanged");
+            }
+        });
+
+    }
+    public void onClickMainMenu () {
+        Log.i(TAG,"onClickMainMenu");
+        setContentView(R.layout.activity_main);
+    }
+    public void onClickStopRobot () {
+        setStatusString("stop");
+        sendGuideCommand("s");
+    }
+    public void onClickBase () {
+        setStatusString("base");
+        sendGuideCommand("b");
+    }
+    public void onClickFollow () {
+        setStatusString("follow");
+        sendGuideCommand("f");
     }
 
     void setConnectButtonColor (final int color) {
@@ -85,6 +229,13 @@ public class MainActivity extends ActionBarActivity implements CardReaderFragmen
         });
     }
 
+
+
+    public void setStatusString(String str) {
+        TextView title_textView = (TextView) findViewById(R.id.title_text);
+        title_textView.setText("Status: " + str);
+    }
+
     private boolean sendGuideCommand (String str) {
         if(!tcp_client.isRunning())
             return false;
@@ -92,7 +243,9 @@ public class MainActivity extends ActionBarActivity implements CardReaderFragmen
             return true;
     }
 
-    public void onClickConnect (View view) {
+
+
+    public void onClickConnect () {
         Button connect_button= (Button) findViewById(R.id.connect_button);
         ColorDrawable buttonColor = (ColorDrawable) connect_button.getBackground();
         int colorId = buttonColor.getColor();
@@ -104,13 +257,6 @@ public class MainActivity extends ActionBarActivity implements CardReaderFragmen
         }
     }
 
-    public void stopButtonClicked(View view) {
-        sendGuideCommand("s");
-    }
-
-    public void baseButtonClicked(View view) {
-        sendGuideCommand("b");
-    }
 
     public void elevatorButtonClicked(View v){
         int floorNum;

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="50dp"
+     >
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:id="@+id/connect_button"
+        android:layout_alignParentTop="true"
+        android:minWidth="50dp"
+        android:background="@android:color/holo_red_light"
+        android:layout_marginRight="10dp"
+        />
+
+    <TextView
+        android:id="@+id/title_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAllCaps="true"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:textColor="#fff"
+        android:textStyle="bold"
+        android:minWidth="400dp"
+        android:layout_alignBottom="@+id/stopRobotButton"
+        android:layout_toEndOf="@+id/connect_button" />
+
+    <Button
+        android:layout_toRightOf="@+id/title_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Stop"
+        android:id="@+id/stopRobotButton"
+        android:layout_centerHorizontal="true"
+        android:textColor="#fff"
+        android:background="@android:color/holo_red_light"
+        android:width="100dp"
+        android:layout_gravity="center_vertical"
+        android:layout_marginRight="40dp"
+        />
+
+    <Button
+        android:layout_toRightOf="@+id/stopRobotButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Base"
+        android:id="@+id/baseButton"
+        android:layout_centerHorizontal="true"
+        android:textColor="#fff"
+        android:background="@android:color/holo_blue_dark"
+        android:width="80dp"
+        android:layout_gravity="center_vertical"
+        android:layout_marginRight="40dp"
+        />
+
+    <Button
+        android:layout_toRightOf="@+id/baseButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Follow"
+        android:id="@+id/followButton"
+        android:layout_centerHorizontal="true"
+        android:textColor="#fff"
+        android:background="@android:color/holo_blue_dark"
+        android:width="80dp"
+        android:layout_gravity="center_vertical"
+        />
+
+
+
+</RelativeLayout>
