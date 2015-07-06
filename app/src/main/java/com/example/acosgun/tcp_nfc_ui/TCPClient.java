@@ -7,6 +7,7 @@ import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
@@ -28,6 +29,7 @@ public class TCPClient implements Runnable{
     private BufferedReader in = null;
     private boolean mRun = false;
     Handler mHandler;
+    private boolean connected_ = false;
 
     public TCPClient (Handler handler, String ip_add, int port) {
         this.PORT = port;
@@ -35,8 +37,18 @@ public class TCPClient implements Runnable{
         this.mHandler = handler;
     }
 
+    public void changeIP(String ip) {
+        this.IP_ADDRESS = ip;
+    }
+    public void changePort(int port) {
+        this.PORT = port;
+    }
+
     public boolean isRunning () {
         return mRun;
+    }
+    public boolean isConnected () {
+        return connected_;
     }
 
     public void sendMessage (String msg) {
@@ -47,6 +59,7 @@ public class TCPClient implements Runnable{
         }
     }
 
+    /*
     public boolean disconnect() {
         try {
         socket.close();
@@ -61,12 +74,152 @@ public class TCPClient implements Runnable{
         //mMainActivity.tcpInputCallback(false, "");
         return true;
     }
+*/
+
+    public boolean disconnect() {
+        sendConnectDataToActivity("",false);
+        connected_ = false;
+
+        try {
+
+            socket.close();
+            in.close();
+            out.close();
+        } catch (Exception e) {
+            Log.d(TAG, "Error", e);
+            return false;
+        }
+        Log.d(TAG, "disconnect called");
+        return true;
+    }
+
+    private void sendConnectDataToActivity(String data, boolean connected) {
+        Message msg1 = mHandler.obtainMessage();
+        Bundle bun1 = new Bundle();
+        bun1.putString("data", data);
+        bun1.putBoolean("connected", connected);
+        msg1.setData(bun1);
+        mHandler.sendMessage(msg1);
+    }
 
     public void run() {
+        android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
+
+        while(true) {
+
+            try
+            {
+                Log.d(TAG, "Try Creating Sockets w IP:" + IP_ADDRESS);
+                InetAddress serverAddr = InetAddress.getByName(this.IP_ADDRESS);
+                socket = new Socket(serverAddr, this.PORT);
+                socket.setKeepAlive(true);
+                socket.setTcpNoDelay(true);
+                out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
+                in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                connected_ = true;
+                sendConnectDataToActivity("Connected",true);
+            }
+            catch (Exception e)
+            {
+                Log.d(TAG, "Socket cannot be created.", e);
+                disconnect();
+            }
+
+            while (connected_) {
+                //Log.d(TAG, "connected_: " + connected_);
+                try
+                {
+                    String incomingMessage;
+                        try
+                        {
+                        incomingMessage = in.readLine();
+                            if (incomingMessage != null) {
+                                Log.d(TAG, "RCVD MSG: " +incomingMessage);
+                                String strNewState = interpretStateInt(incomingMessage);
+                                sendConnectDataToActivity(strNewState,true);
+                            }
+                            else {
+                                disconnect();
+                                break;
+                            }
+                        }
+                        catch(IOException e)
+                        {
+                            Log.d(TAG, "MY IOException!!");
+                        }
+
+                } catch (Exception e){
+                    Log.d(TAG, "Error", e);
+                    disconnect();
+                    break;
+                }
+
+
+            } // end of inner while
+
+            try { //SLEEP for 1 second
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                Log.e(TAG, "local Thread error", e);
+            }
+        } //end of outer while
+    }
+
+
+    private String interpretStateInt (String in) {
+        String out;
+        int intState;
+        try {
+            intState = Integer.parseInt(in, 10);
+        }
+        catch (NumberFormatException exception)
+        {
+            return "N/A";
+        }
+
+        if(intState == 0) {
+            out = "WAITING";
+        }
+        else if(intState == 1) {
+            out = "APPROACHING";
+        }
+        else if(intState == 2) {
+            out = "DISPLAYING_DESTINATION";
+        }
+        else if(intState == 3) {
+            out = "GUIDING_TO_LOCATION";
+        }
+        else if(intState == 4) {
+            out = "WAITING_AT_GOAL";
+        }
+        else if(intState == 5) {
+            out = "GOING_TO_BASE";
+        }
+        else if(intState == 6) {
+            out = "ROTATING_TO_GOAL";
+        }
+        else if(intState == 7) {
+            out = "FOLLOWING";
+        }
+        else {
+            out = "N/A";
+        }
+
+        return out;
+    }
+
+/*
+    public void run() {
         mRun = true;
+        android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
+
         try {
             InetAddress serverAddr = InetAddress.getByName(this.IP_ADDRESS);
             socket = new Socket(serverAddr, this.PORT);
+            socket.setKeepAlive(true);
+            socket.setTcpNoDelay(true);
+
+
 
             Log.d(TAG, "socket successfully created");
 
@@ -131,5 +284,6 @@ public class TCPClient implements Runnable{
         }
         mRun = false;
     }
+*/
 
 }

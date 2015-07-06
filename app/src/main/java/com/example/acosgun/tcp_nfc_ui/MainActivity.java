@@ -2,6 +2,7 @@ package com.example.acosgun.tcp_nfc_ui;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -11,25 +12,34 @@ import android.os.Message;
 import android.os.StrictMode;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarActivity;
+
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.support.v7.app.ActionBar.Tab;
-import android.support.v7.app.ActionBar.TabListener;
+
+
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarActivity;
+
+
+//import android.app.ActionBar.TabListener;
+//import android.support.v7.app.ActionBar.TabListener;
 
 public class MainActivity extends ActionBarActivity implements CardReaderFragment.NfcReaderInputListener {
 
     private static final String TAG= "MainActivity";
+    public static final String PREFS_NAME = "MyPrefsFile";
     //private final Activity mActivity;
 
     private Menu mMenu;
@@ -50,9 +60,8 @@ public class MainActivity extends ActionBarActivity implements CardReaderFragmen
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
-
         ActionBar mActionBar = getSupportActionBar();
+        //ActionBar mActionBar = getActionBar();
         mActionBar.setDisplayShowTitleEnabled(false);
         mActionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM);
 
@@ -60,9 +69,6 @@ public class MainActivity extends ActionBarActivity implements CardReaderFragmen
         View mCustomView = mInflater.inflate(R.layout.custom_actionbar, null);
         mActionBar.setCustomView(mCustomView);
         mActionBar.setDisplayShowCustomEnabled(true);
-
-
-
 
         this.setConnectButtonColor(Color.RED);
 
@@ -118,12 +124,13 @@ public class MainActivity extends ActionBarActivity implements CardReaderFragmen
           @Override
           public void handleMessage(Message msg) {
               //Log.d(TAG, "handleMessage: " + msg);
-              String stringMessage = msg.getData().getString("message");
+              String stringMessage = msg.getData().getString("data");
               boolean booleanConnected = msg.getData().getBoolean("connected");
               if(booleanConnected) {
                   setConnectButtonColor(Color.GREEN);
                   if(stringMessage!=null) {
                       Log.d(TAG, "Msg: " + stringMessage);
+                      setStatusString(stringMessage);
                   }
               }
               else {
@@ -133,15 +140,14 @@ public class MainActivity extends ActionBarActivity implements CardReaderFragmen
           }
         };
 
-
-        tcp_client = new TCPClient(tcp_handler, IP_ADDRESS, PORT);
-        mThread = new Thread(tcp_client);
-        mThread.start();
+        SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+        String ip_addy= settings.getString("ip_addy", IP_ADDRESS);
+        IP_ADDRESS = ip_addy;
 
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
 
-
+        restartTCPClient();
 
     }
 
@@ -173,46 +179,66 @@ public class MainActivity extends ActionBarActivity implements CardReaderFragmen
     }
     public void onClickSettings () {
         Log.i(TAG,"onClickSettings");
-        setStatusString("onClickSettings");
         setContentView(R.layout.activity_setup);
 
 
         EditText ipEditText= (EditText) findViewById(R.id.ip_editText);
-        ipEditText.addTextChangedListener(new TextWatcher() {
 
-            @Override
-            public void afterTextChanged(Editable s) {
-                setStatusString("afterTextChanged");
-            }
+        ipEditText.setText(IP_ADDRESS);
 
-            @Override
-            public void beforeTextChanged(CharSequence s, int start,
-                                          int count, int after) {
-                setStatusString("beforeTextChanged");
-            }
 
+        ipEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
-            public void onTextChanged(CharSequence s, int start,
-                                      int before, int count) {
-                setStatusString("onTextChanged");
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_DONE) {
+                    // do your stuff here
+
+                    IP_ADDRESS = v.getText().toString();
+
+                    SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+                    SharedPreferences.Editor editor = settings.edit();
+                    editor.putString("ip_addy", IP_ADDRESS);
+                    editor.apply();
+
+                    tcp_client.changeIP(IP_ADDRESS);
+                    tcp_client.disconnect();
+                }
+
+                return false;
             }
         });
-
+        ipEditText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (!hasFocus) {
+                    hideSoftKeyboard(v);
+                }
+            }
+        });
     }
+
+    public void hideSoftKeyboard(View view) {
+        InputMethodManager inputMethodManager =(InputMethodManager)getSystemService(Activity.INPUT_METHOD_SERVICE);
+        inputMethodManager.hideSoftInputFromWindow(view.getWindowToken(), 0);
+    }
+
+    public void restartTCPClient() {
+        tcp_client = new TCPClient(tcp_handler, IP_ADDRESS, PORT);
+        mThread = new Thread(tcp_client);
+        mThread.start();
+    }
+
     public void onClickMainMenu () {
         Log.i(TAG,"onClickMainMenu");
         setContentView(R.layout.activity_main);
     }
     public void onClickStopRobot () {
-        setStatusString("stop");
         sendGuideCommand("s");
     }
     public void onClickBase () {
-        setStatusString("base");
         sendGuideCommand("b");
     }
     public void onClickFollow () {
-        setStatusString("follow");
         sendGuideCommand("f");
     }
 
@@ -237,7 +263,7 @@ public class MainActivity extends ActionBarActivity implements CardReaderFragmen
     }
 
     private boolean sendGuideCommand (String str) {
-        if(!tcp_client.isRunning())
+        if(!tcp_client.isConnected())
             return false;
         tcp_client.sendMessage(str);
             return true;
@@ -250,8 +276,13 @@ public class MainActivity extends ActionBarActivity implements CardReaderFragmen
         ColorDrawable buttonColor = (ColorDrawable) connect_button.getBackground();
         int colorId = buttonColor.getColor();
         if (colorId == Color.RED) {
-            if(!tcp_client.isRunning())
+            /*
+            if(!tcp_client.isRunning()) {
                 mThread.run();
+            } else {
+                restartTCPClient();
+            }*/
+
         } else {
             tcp_client.disconnect();
         }
