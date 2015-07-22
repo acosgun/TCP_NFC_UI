@@ -2,17 +2,20 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:paddingLeft="16dp"
+    android:paddingRight="16dp"
     android:weightSum="1">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:textSize="30dp"
         android:text="IP:"
         android:id="@+id/ip_textView"
-        android:textSize="@android:dimen/app_icon_size" />
+        />
 
     <EditText
-        android:layout_width="280dp"
+        android:layout_width="150dp"
         android:layout_height="wrap_content"
         android:id="@+id/ip_editText"
         android:layout_toRightOf="@+id/ip_textView"
@@ -21,5 +24,66 @@
         android:imeOptions="actionDone"
         android:inputType="textImeMultiLine"
          />
+
+    <ListView
+        android:layout_width="500dp"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@+id/ip_editText"
+        android:id="@+id/listView"
+        />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="50dp"
+        android:text="Set to Default"
+        android:id="@+id/button17"
+        android:layout_alignParentEnd="true"
+        android:layout_toRightOf="@+id/listView"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Delete Row"
+        android:id="@+id/button18"
+        android:layout_below="@+id/button17"
+        android:layout_alignParentEnd="true"
+        android:layout_toEndOf="@+id/listView"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="100dp"
+        android:text="Set Current Location As: BASE"
+        android:id="@+id/button19"
+        android:layout_above="@+id/button20"
+        android:layout_toEndOf="@+id/listView"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp"
+        android:layout_alignParentEnd="true"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="100dp"
+        android:text="Add Current Location As a: WAYPOINT"
+        android:id="@+id/button20"
+        android:layout_alignParentBottom="true"
+        android:layout_toEndOf="@+id/listView"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Get Current List"
+        android:id="@+id/button21"
+        android:layout_below="@+id/button18"
+        android:layout_toEndOf="@+id/listView"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        android:layout_alignParentEnd="true"
+        android:onClick="getCurrentWaypoints"/>
 
 </RelativeLayout>

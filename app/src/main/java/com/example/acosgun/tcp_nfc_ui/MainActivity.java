@@ -399,4 +399,8 @@ public class MainActivity extends ActionBarActivity implements CardReaderFragmen
         overridePendingTransition(0,0);
     }
 
+    public void getCurrentWaypoints(View view) {
+        Log.i(TAG,"getCurrentWaypoints");
+    }
+
 }
