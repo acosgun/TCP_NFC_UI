@@ -3,7 +3,6 @@ package com.example.acosgun.tcp_nfc_ui;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
@@ -11,11 +10,9 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.StrictMode;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
 
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
+import android.util.Xml;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -24,13 +21,31 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.TextView;
 
 
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xmlpull.v1.XmlSerializer;
+
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 
 //import android.app.ActionBar.TabListener;
@@ -40,7 +55,8 @@ public class MainActivity extends ActionBarActivity implements CardReaderFragmen
 
     private static final String TAG= "MainActivity";
     public static final String PREFS_NAME = "MyPrefsFile";
-    //private final Activity mActivity;
+
+
 
     private Menu mMenu;
     private Fragment mSettingsFragment;
@@ -54,6 +70,7 @@ public class MainActivity extends ActionBarActivity implements CardReaderFragmen
     public Handler tcp_handler;
     Thread mThread;
     int last_elev_number;
+    int last_selected_waypoint;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -128,10 +145,43 @@ public class MainActivity extends ActionBarActivity implements CardReaderFragmen
               boolean booleanConnected = msg.getData().getBoolean("connected");
               if(booleanConnected) {
                   setConnectButtonColor(Color.GREEN);
-                  if(stringMessage!=null) {
-                      Log.d(TAG, "Msg: " + stringMessage);
-                      setStatusString(stringMessage);
-                  }
+                  if(stringMessage==null)
+                      return;
+
+                      //Log.d(TAG, "Msg: " + stringMessage);
+
+
+                      DocumentBuilderFactory factory;
+                      DocumentBuilder builder;
+                      Document doc = null;
+                      InputStream is;
+                      try {
+                          factory = DocumentBuilderFactory.newInstance();
+                          builder = factory.newDocumentBuilder();
+                          is = new ByteArrayInputStream(stringMessage.getBytes("UTF-8"));
+                          doc = builder.parse(is);
+                      }
+                      catch (Exception e) {
+                          //Log.e(TAG, "InputStream error");
+                      }
+
+
+                      boolean success = false;
+                      try {
+                          success = parseStatusMessage(doc);
+                      }
+                      catch (Exception e) {
+                          ///Log.i(TAG, "parseStatusMessage not found");
+                      }
+
+                      try {
+                          if(!success)
+                             success = parseWaypoints(doc);
+                      }
+                      catch (Exception e) {
+                          //Log.i(TAG, "parseWaypoints not found");
+                      }
+
               }
               else {
                   setConnectButtonColor(Color.RED);
@@ -177,10 +227,175 @@ public class MainActivity extends ActionBarActivity implements CardReaderFragmen
                 return super.onOptionsItemSelected(item);
         }
     }
+
+    private boolean parseWaypoints(Document doc) {
+
+
+        List<String> stringList = new ArrayList<>();
+
+
+        NodeList nList_root = doc.getElementsByTagName("waypoints");
+        Node nNode = nList_root.item(0);
+        NodeList nList = nNode.getChildNodes();
+
+        int wp_count = 0;
+        for (int i=0; i<nList.getLength(); i++) {
+            Node n = nList.item(i);
+            if(n.getNodeName().equals("waypoint")) {
+                NodeList nList_pos = n.getChildNodes();
+                String x = null;
+                String y = null;
+                String z = null;
+                String q1 = null;
+                String q2 = null;
+                String q3 = null;
+                String q4 = null;
+
+                for (int j=0; j<nList_pos.getLength(); j++) {
+                    Node n_pos = nList_pos.item(j);
+
+                    if(n_pos.getNodeName().equals("x")) {
+                        x = n_pos.getTextContent();
+                    } else if(n_pos.getNodeName().equals("y")) {
+                        y = n_pos.getTextContent();
+                    } else if(n_pos.getNodeName().equals("z")) {
+                        z = n_pos.getTextContent();
+                    } else if(n_pos.getNodeName().equals("q1")) {
+                        q1 = n_pos.getTextContent();
+                    } else if(n_pos.getNodeName().equals("q2")){
+                        q2 = n_pos.getTextContent();
+                    } else if(n_pos.getNodeName().equals("q3")){
+                        q3 = n_pos.getTextContent();
+                    } else if(n_pos.getNodeName().equals("q4")){
+                        q4 = n_pos.getTextContent();
+                    }
+
+                }
+
+                //String line = String.format("Waypoint %d\n\t(x: %s, y: %s)\n\tAngle: (%s,%s,%s,%s)", wp_count, x,y,q1,q2,q3,q4);
+                String line = String.format("WAYPOINT %d\n\tX: %s\tY: %s", wp_count, x,y);
+                stringList.add(line);
+                wp_count++;
+            }
+            else if(n.getNodeName().equals("base")) {
+
+                NodeList nList_pos = n.getChildNodes();
+                String x = null;
+                String y = null;
+                String z = null;
+                String q1 = null;
+                String q2 = null;
+                String q3 = null;
+                String q4 = null;
+
+                for (int j=0; j<nList_pos.getLength(); j++) {
+                    Node n_pos = nList_pos.item(j);
+
+                    if(n_pos.getNodeName().equals("x")) {
+                        x = n_pos.getTextContent();
+                    } else if(n_pos.getNodeName().equals("y")) {
+                        y = n_pos.getTextContent();
+                    } else if(n_pos.getNodeName().equals("z")) {
+                        z = n_pos.getTextContent();
+                    } else if(n_pos.getNodeName().equals("q1")) {
+                        q1 = n_pos.getTextContent();
+                    } else if(n_pos.getNodeName().equals("q2")){
+                        q2 = n_pos.getTextContent();
+                    } else if(n_pos.getNodeName().equals("q3")){
+                        q3 = n_pos.getTextContent();
+                    } else if(n_pos.getNodeName().equals("q4")){
+                        q4 = n_pos.getTextContent();
+                    }
+
+                }
+
+                //String line = String.format("Base\n\t(x: %s, y:%s)\n\tAngle:(%s,%s,%s,%s)", x,y,q1,q2,q3,q4);
+                String line = String.format("BASE\n\tX: %s\tY: %s", x,y);
+                stringList.add(0,line);
+            }
+        }
+
+        if(stringList.isEmpty())
+           return false;
+
+
+        String[] stringArray = stringList.toArray(new String[stringList.size()]);
+        ArrayAdapter<String> codeLearnArrayAdapter = new ArrayAdapter<String>(this, R.layout.my_list_layout, stringArray);
+        ListView listView = (ListView)findViewById(R.id.listView);
+        listView.setAdapter(codeLearnArrayAdapter);
+
+        return false;
+    }
+
+    private boolean parseStatusMessage(Document doc) {
+        NodeList nList = doc.getElementsByTagName("Status");
+        Node nNode = nList.item(0);
+            if (nNode.getNodeType() == Node.ELEMENT_NODE) {
+                Element eElement = (Element) nNode;
+                //System.out.println("Current Element: " + nNode.getNodeName());
+
+                String status = eElement.getTextContent();
+                //System.out.println("Status: " + status);
+
+                String strNewState = interpretStateInt(status);
+                setStatusString(strNewState);
+                return true;
+                }
+
+        return false;
+    }
+
+    private String interpretStateInt (String in) {
+        String out;
+        int intState;
+        try {
+            intState = Integer.parseInt(in, 10);
+        }
+        catch (NumberFormatException exception)
+        {
+            return "N/A";
+        }
+
+        if(intState == 0) {
+            out = "WAITING";
+        }
+        else if(intState == 1) {
+            out = "APPROACHING";
+        }
+        else if(intState == 2) {
+            out = "DISPLAYING_DESTINATION";
+        }
+        else if(intState == 3) {
+            out = "GUIDING_TO_LOCATION";
+        }
+        else if(intState == 4) {
+            out = "WAITING_AT_GOAL";
+        }
+        else if(intState == 5) {
+            out = "GOING_TO_BASE";
+        }
+        else if(intState == 6) {
+            out = "ROTATING_TO_GOAL";
+        }
+        else if(intState == 7) {
+            out = "FOLLOWING";
+        }
+        else {
+            out = "N/A";
+        }
+
+        return out;
+    }
+
     public void onClickSettings () {
         Log.i(TAG,"onClickSettings");
         setContentView(R.layout.activity_setup);
 
+
+        View v = null;
+        getCurrentWaypoints(v);
+
+        last_selected_waypoint = -1;
 
         EditText ipEditText= (EditText) findViewById(R.id.ip_editText);
 
@@ -215,6 +430,33 @@ public class MainActivity extends ActionBarActivity implements CardReaderFragmen
                 }
             }
         });
+
+        final ListView lv = (ListView) findViewById(R.id.listView);
+        lv.setClickable(true);
+        lv.setChoiceMode(ListView.CHOICE_MODE_SINGLE); // Enables single selection
+        lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            public void onItemClick(AdapterView<?> myAdapter, View myView, int myItemInt, long mylng) {
+                //String selectedFromList =(String) (lv.getItemAtPosition(myItemInt));
+
+                if(myItemInt == last_selected_waypoint) {
+                    lv.clearChoices();
+                    lv.requestLayout();
+                    last_selected_waypoint = -1;
+                }
+                else {
+
+                    last_selected_waypoint = myItemInt;
+                }
+
+                Button deleteButton= (Button) findViewById(R.id.button18);
+                if(lv.isItemChecked(myItemInt))
+                    deleteButton.setVisibility(View.VISIBLE);
+                else
+                    deleteButton.setVisibility(View.INVISIBLE);
+
+
+            }
+        });
     }
 
     public void hideSoftKeyboard(View view) {
@@ -233,13 +475,13 @@ public class MainActivity extends ActionBarActivity implements CardReaderFragmen
         setContentView(R.layout.activity_main);
     }
     public void onClickStopRobot () {
-        sendGuideCommand("s");
+        sendStringTCP("s");
     }
     public void onClickBase () {
-        sendGuideCommand("b");
+        sendStringTCP("b");
     }
     public void onClickFollow () {
-        sendGuideCommand("f");
+        sendStringTCP("f");
     }
 
     void setConnectButtonColor (final int color) {
@@ -262,7 +504,7 @@ public class MainActivity extends ActionBarActivity implements CardReaderFragmen
         title_textView.setText("Status: " + str);
     }
 
-    private boolean sendGuideCommand (String str) {
+    private boolean sendStringTCP(String str) {
         if(!tcp_client.isConnected())
             return false;
         tcp_client.sendMessage(str);
@@ -361,7 +603,7 @@ public class MainActivity extends ActionBarActivity implements CardReaderFragmen
             Log.i(TAG,"RESULT_CANCELED");
         } else if (resultCode == RESULT_OK) {
             Log.i(TAG,"RESULT_OK");
-            sendGuideCommand("g"+last_elev_number);
+            sendStringTCP("g" + last_elev_number);
         }
     }
 
@@ -401,6 +643,100 @@ public class MainActivity extends ActionBarActivity implements CardReaderFragmen
 
     public void getCurrentWaypoints(View view) {
         Log.i(TAG,"getCurrentWaypoints");
+        XmlSerializer serializer = Xml.newSerializer();
+        StringWriter writer = new StringWriter();
+        try {
+            serializer.setOutput(writer);
+            serializer.startDocument("UTF-8", true);
+            serializer.startTag("", "Request");
+            serializer.startTag("", "GetCurrentWaypointList");
+            serializer.text("");
+            serializer.endTag("", "GetCurrentWaypointList");
+            serializer.endTag("", "Request");
+            serializer.endDocument();
+            sendStringTCP(writer.toString());
+        } catch (Exception e) {
+            Log.e(TAG,"Error Creating XML");
+        }
     }
+
+    public void setWaypointsToDefault(View view) {
+        Log.i(TAG,"setWaypointsToDefault");
+        XmlSerializer serializer = Xml.newSerializer();
+        StringWriter writer = new StringWriter();
+        try {
+            serializer.setOutput(writer);
+            serializer.startDocument("UTF-8", true);
+            serializer.startTag("", "Request");
+            serializer.startTag("", "setWaypointsToDefault");
+            serializer.text("");
+            serializer.endTag("", "SetWaypointsToDefault");
+            serializer.endTag("", "Request");
+            serializer.endDocument();
+            sendStringTCP(writer.toString());
+        } catch (Exception e) {
+            Log.e(TAG,"Error Creating XML");
+        }
+    }
+
+    public void deleteWaypointRow(View view) {
+        Log.i(TAG,"deleteWaypointRow");
+        XmlSerializer serializer = Xml.newSerializer();
+        StringWriter writer = new StringWriter();
+        try {
+            serializer.setOutput(writer);
+            serializer.startDocument("UTF-8", true);
+            serializer.startTag("", "Request");
+            serializer.startTag("", "DeleteWaypointRow");
+            serializer.text("1");
+            serializer.endTag("", "DeleteWaypointRow");
+            serializer.endTag("", "Request");
+            serializer.endDocument();
+            sendStringTCP(writer.toString());
+        } catch (Exception e) {
+            Log.e(TAG,"Error Creating XML");
+        }}
+    public void setLocationAsBase(View view) {
+        Log.i(TAG,"setLocationAsBase");
+        XmlSerializer serializer = Xml.newSerializer();
+        StringWriter writer = new StringWriter();
+        try {
+            serializer.setOutput(writer);
+            serializer.startDocument("UTF-8", true);
+            serializer.startTag("", "Request");
+            serializer.startTag("", "SetLocationAsBase");
+            serializer.text("");
+            serializer.endTag("", "SetLocationAsBase");
+            serializer.endTag("", "Request");
+            serializer.endDocument();
+            sendStringTCP(writer.toString());
+        } catch (Exception e) {
+            Log.e(TAG,"Error Creating XML");
+        }
+    }
+    public void setLocationAsWaypoint(View view) {
+        Log.i(TAG,"setLocationAsWaypoint");
+        XmlSerializer serializer = Xml.newSerializer();
+        StringWriter writer = new StringWriter();
+        try {
+            serializer.setOutput(writer);
+            serializer.startDocument("UTF-8", true);
+            serializer.startTag("", "Request");
+            serializer.startTag("", "SetLocationAsWaypoint");
+            serializer.text("");
+            serializer.endTag("", "SetLocationAsWaypoint");
+            serializer.endTag("", "Request");
+            serializer.endDocument();
+            sendStringTCP(writer.toString());
+        } catch (Exception e) {
+            Log.e(TAG,"Error Creating XML");
+        }
+    }
+
+
+
+
+
+
 
 }

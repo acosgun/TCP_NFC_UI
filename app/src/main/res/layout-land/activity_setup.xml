@@ -26,10 +26,14 @@
          />
 
     <ListView
-        android:layout_width="500dp"
+        android:layout_width="350dp"
         android:layout_height="wrap_content"
         android:layout_toRightOf="@+id/ip_editText"
         android:id="@+id/listView"
+        android:layout_marginTop="30dp"
+        android:layout_marginBottom="15dp"
+        android:layout_marginLeft="100dp"
+        android:layout_marginRight="50dp"
         />
 
     <Button
@@ -40,7 +44,8 @@
         android:layout_alignParentEnd="true"
         android:layout_toRightOf="@+id/listView"
         android:layout_marginTop="5dp"
-        android:layout_marginBottom="5dp"/>
+        android:layout_marginBottom="5dp"
+        android:onClick="setWaypointsToDefault"/>
 
     <Button
         android:layout_width="wrap_content"
@@ -51,7 +56,9 @@
         android:layout_alignParentEnd="true"
         android:layout_toEndOf="@+id/listView"
         android:layout_marginTop="5dp"
-        android:layout_marginBottom="5dp"/>
+        android:layout_marginBottom="5dp"
+        android:onClick="deleteWaypointRow"
+        android:visibility="invisible" />
 
     <Button
         android:layout_width="wrap_content"
@@ -62,7 +69,9 @@
         android:layout_toEndOf="@+id/listView"
         android:layout_marginTop="10dp"
         android:layout_marginBottom="10dp"
-        android:layout_alignParentEnd="true"/>
+        android:layout_alignParentEnd="true"
+        android:onClick="setLocationAsBase"
+        />
 
     <Button
         android:layout_width="wrap_content"
@@ -72,7 +81,9 @@
         android:layout_alignParentBottom="true"
         android:layout_toEndOf="@+id/listView"
         android:layout_marginTop="10dp"
-        android:layout_marginBottom="10dp"/>
+        android:layout_marginBottom="10dp"
+        android:onClick="setLocationAsWaypoint"
+        />
 
     <Button
         android:layout_width="wrap_content"
@@ -84,6 +95,7 @@
         android:layout_marginTop="5dp"
         android:layout_marginBottom="5dp"
         android:layout_alignParentEnd="true"
-        android:onClick="getCurrentWaypoints"/>
+        android:onClick="getCurrentWaypoints"
+        android:visibility="invisible" />
 
 </RelativeLayout>

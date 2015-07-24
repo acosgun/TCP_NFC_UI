@@ -221,8 +221,7 @@
         android:textSize="50dp"
         android:gravity="center"
         android:layout_alignParentEnd="true"
-        android:layout_alignBottom="@+id/connect_button"
         android:layout_toEndOf="@+id/button4"
-        android:layout_alignParentTop="true" />
+        android:layout_marginTop="60dp" />
 
 </RelativeLayout>

@@ -109,7 +109,7 @@ public class TCPClient implements Runnable{
 
             try
             {
-                Log.d(TAG, "Try Creating Sockets w IP:" + IP_ADDRESS);
+                Log.w(TAG, "Try Creating Sockets w IP:" + IP_ADDRESS);
                 InetAddress serverAddr = InetAddress.getByName(this.IP_ADDRESS);
                 socket = new Socket(serverAddr, this.PORT);
                 socket.setKeepAlive(true);
@@ -121,7 +121,7 @@ public class TCPClient implements Runnable{
             }
             catch (Exception e)
             {
-                Log.d(TAG, "Socket cannot be created.", e);
+                Log.w(TAG, "Socket cannot be created.", e);
                 disconnect();
             }
 
@@ -134,9 +134,9 @@ public class TCPClient implements Runnable{
                         {
                         incomingMessage = in.readLine();
                             if (incomingMessage != null) {
-                                Log.d(TAG, "RCVD MSG: " +incomingMessage);
-                                String strNewState = interpretStateInt(incomingMessage);
-                                sendConnectDataToActivity(strNewState,true);
+                                //Log.d(TAG, "RCVD MSG: " +incomingMessage);
+
+                                sendConnectDataToActivity(incomingMessage,true);
                             }
                             else {
                                 disconnect();
@@ -166,47 +166,7 @@ public class TCPClient implements Runnable{
     }
 
 
-    private String interpretStateInt (String in) {
-        String out;
-        int intState;
-        try {
-            intState = Integer.parseInt(in, 10);
-        }
-        catch (NumberFormatException exception)
-        {
-            return "N/A";
-        }
 
-        if(intState == 0) {
-            out = "WAITING";
-        }
-        else if(intState == 1) {
-            out = "APPROACHING";
-        }
-        else if(intState == 2) {
-            out = "DISPLAYING_DESTINATION";
-        }
-        else if(intState == 3) {
-            out = "GUIDING_TO_LOCATION";
-        }
-        else if(intState == 4) {
-            out = "WAITING_AT_GOAL";
-        }
-        else if(intState == 5) {
-            out = "GOING_TO_BASE";
-        }
-        else if(intState == 6) {
-            out = "ROTATING_TO_GOAL";
-        }
-        else if(intState == 7) {
-            out = "FOLLOWING";
-        }
-        else {
-            out = "N/A";
-        }
-
-        return out;
-    }
 
 /*
     public void run() {
