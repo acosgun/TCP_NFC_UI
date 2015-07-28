@@ -31,6 +31,7 @@ import android.widget.TextView;
 
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
+import android.widget.Toast;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -166,8 +167,18 @@ public class MainActivity extends ActionBarActivity implements CardReaderFragmen
                       }
 
 
+
                       boolean success = false;
+
                       try {
+                          success = parseErrorMessage(doc);
+                      }
+                      catch (Exception e) {
+
+                      }
+
+                      try {
+                          if(!success)
                           success = parseStatusMessage(doc);
                       }
                       catch (Exception e) {
@@ -324,6 +335,18 @@ public class MainActivity extends ActionBarActivity implements CardReaderFragmen
         ListView listView = (ListView)findViewById(R.id.listView);
         listView.setAdapter(codeLearnArrayAdapter);
 
+        return false;
+    }
+
+    private boolean parseErrorMessage(Document doc) {
+        NodeList nList = doc.getElementsByTagName("ErrorMessage");
+        Node nNode = nList.item(0);
+        if (nNode.getNodeType() == Node.ELEMENT_NODE) {
+            Element eElement = (Element) nNode;
+            String str = eElement.getTextContent();
+            Toast.makeText(getBaseContext(), "Error: " + str, Toast.LENGTH_SHORT).show();
+            return true;
+        }
         return false;
     }
 
@@ -668,7 +691,7 @@ public class MainActivity extends ActionBarActivity implements CardReaderFragmen
             serializer.setOutput(writer);
             serializer.startDocument("UTF-8", true);
             serializer.startTag("", "Request");
-            serializer.startTag("", "setWaypointsToDefault");
+            serializer.startTag("", "SetWaypointsToDefault");
             serializer.text("");
             serializer.endTag("", "SetWaypointsToDefault");
             serializer.endTag("", "Request");
