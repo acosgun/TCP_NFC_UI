@@ -12,18 +12,23 @@
         android:textSize="30dp"
         android:text="IP:"
         android:id="@+id/ip_textView"
+        android:layout_marginTop="15dp"
+        android:layout_marginBottom="15dp"
         />
 
-    <EditText
-        android:layout_width="150dp"
+    <TextView
+        android:layout_width="100dp"
         android:layout_height="wrap_content"
-        android:id="@+id/ip_editText"
-        android:layout_toRightOf="@+id/ip_textView"
-        android:layout_alignBaseline="@+id/ip_textView"
-        android:maxLines="1"
-        android:imeOptions="actionDone"
-        android:inputType="textImeMultiLine"
-         />
+        android:textSize="30dp"
+        android:text="PORT:"
+        android:id="@+id/port_textView"
+        android:layout_below="@+id/ip_textView"
+        android:layout_marginTop="15dp"
+        android:layout_marginBottom="15dp"
+        />
+
+
+
 
     <ListView
         android:layout_width="350dp"
@@ -97,5 +102,28 @@
         android:layout_alignParentEnd="true"
         android:onClick="getCurrentWaypoints"
         android:visibility="invisible" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/port_editText"
+        android:layout_toRightOf="@+id/port_textView"
+        android:layout_alignTop="@+id/port_textView"
+        android:maxLines="1"
+        android:imeOptions="actionDone"
+        android:inputType="textImeMultiLine"
+        android:layout_alignEnd="@+id/ip_editText" />
+
+    <EditText
+        android:layout_width="150dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/ip_editText"
+        android:layout_toRightOf="@+id/ip_textView"
+        android:layout_alignBaseline="@+id/ip_textView"
+        android:maxLines="1"
+        android:imeOptions="actionDone"
+        android:inputType="textImeMultiLine"
+        android:layout_alignEnd="@id/ip_editText"
+        />
 
 </RelativeLayout>

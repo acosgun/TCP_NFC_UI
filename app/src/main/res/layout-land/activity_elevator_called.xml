@@ -11,7 +11,7 @@
         android:id="@+id/elevatorInfoTextView"
         android:layout_gravity="center_horizontal"
         android:layout_weight="0.97"
-        android:textSize="55dp"
+        android:textSize="55sp"
         android:text="asd"
         android:gravity="center" />
 
@@ -21,7 +21,7 @@
         android:layout_height="160dp"
         android:text="Guide Me"
         android:id="@+id/guide_button"
-        android:textSize="75dp"
+        android:textSize="75sp"
         android:layout_alignParentBottom="true"
         android:layout_alignParentStart="true" />
 </RelativeLayout>

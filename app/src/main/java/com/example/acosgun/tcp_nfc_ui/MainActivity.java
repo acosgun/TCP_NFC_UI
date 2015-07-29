@@ -64,7 +64,7 @@ public class MainActivity extends ActionBarActivity implements CardReaderFragmen
 
     private TCPClient  tcp_client;
 
-    private static final int PORT = 4545;
+    private static int PORT = 4545;
     private String IP_ADDRESS= "192.168.0.127";
     //private static final String IP_ADDRESS= "127.0.0.1";
 
@@ -72,6 +72,7 @@ public class MainActivity extends ActionBarActivity implements CardReaderFragmen
     Thread mThread;
     int last_elev_number;
     int last_selected_waypoint;
+    int total_num_waypoints = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -203,13 +204,17 @@ public class MainActivity extends ActionBarActivity implements CardReaderFragmen
 
         SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
         String ip_addy= settings.getString("ip_addy", IP_ADDRESS);
+        int port = settings.getInt("port", 4545);
         IP_ADDRESS = ip_addy;
+        PORT = port;
 
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
 
         restartTCPClient();
 
+        View v = null;
+        getCurrentWaypoints(v);
     }
 
 
@@ -239,6 +244,115 @@ public class MainActivity extends ActionBarActivity implements CardReaderFragmen
         }
     }
 
+
+    private void updateButtons() {
+        Log.d(TAG,"updateButtons");
+
+        if(total_num_waypoints == 0) {
+            ((Button) findViewById(R.id.button1) ).setVisibility(View.INVISIBLE);
+            ((Button) findViewById(R.id.button2) ).setVisibility(View.INVISIBLE);
+            ((Button) findViewById(R.id.button3) ).setVisibility(View.INVISIBLE);
+            ((Button) findViewById(R.id.button4) ).setVisibility(View.INVISIBLE);
+            ((Button) findViewById(R.id.button5) ).setVisibility(View.INVISIBLE);
+            ((Button) findViewById(R.id.button6) ).setVisibility(View.INVISIBLE);
+            ((Button) findViewById(R.id.button7) ).setVisibility(View.INVISIBLE);
+            ((Button) findViewById(R.id.button8) ).setVisibility(View.INVISIBLE);
+            ((Button) findViewById(R.id.button9) ).setVisibility(View.INVISIBLE);
+        } else if(total_num_waypoints == 1) {
+            ((Button) findViewById(R.id.button1) ).setVisibility(View.VISIBLE);
+            ((Button) findViewById(R.id.button2) ).setVisibility(View.INVISIBLE);
+            ((Button) findViewById(R.id.button3) ).setVisibility(View.INVISIBLE);
+            ((Button) findViewById(R.id.button4) ).setVisibility(View.INVISIBLE);
+            ((Button) findViewById(R.id.button5) ).setVisibility(View.INVISIBLE);
+            ((Button) findViewById(R.id.button6) ).setVisibility(View.INVISIBLE);
+            ((Button) findViewById(R.id.button7) ).setVisibility(View.INVISIBLE);
+            ((Button) findViewById(R.id.button8) ).setVisibility(View.INVISIBLE);
+            ((Button) findViewById(R.id.button9) ).setVisibility(View.INVISIBLE);
+        } else if(total_num_waypoints == 2) {
+            ((Button) findViewById(R.id.button1) ).setVisibility(View.VISIBLE);
+            ((Button) findViewById(R.id.button2) ).setVisibility(View.VISIBLE);
+            ((Button) findViewById(R.id.button3) ).setVisibility(View.INVISIBLE);
+            ((Button) findViewById(R.id.button4) ).setVisibility(View.INVISIBLE);
+            ((Button) findViewById(R.id.button5) ).setVisibility(View.INVISIBLE);
+            ((Button) findViewById(R.id.button6) ).setVisibility(View.INVISIBLE);
+            ((Button) findViewById(R.id.button7) ).setVisibility(View.INVISIBLE);
+            ((Button) findViewById(R.id.button8) ).setVisibility(View.INVISIBLE);
+            ((Button) findViewById(R.id.button9) ).setVisibility(View.INVISIBLE);
+        } else if(total_num_waypoints == 3) {
+            ((Button) findViewById(R.id.button1) ).setVisibility(View.VISIBLE);
+            ((Button) findViewById(R.id.button2) ).setVisibility(View.VISIBLE);
+            ((Button) findViewById(R.id.button3) ).setVisibility(View.VISIBLE);
+            ((Button) findViewById(R.id.button4) ).setVisibility(View.INVISIBLE);
+            ((Button) findViewById(R.id.button5) ).setVisibility(View.INVISIBLE);
+            ((Button) findViewById(R.id.button6) ).setVisibility(View.INVISIBLE);
+            ((Button) findViewById(R.id.button7) ).setVisibility(View.INVISIBLE);
+            ((Button) findViewById(R.id.button8) ).setVisibility(View.INVISIBLE);
+            ((Button) findViewById(R.id.button9) ).setVisibility(View.INVISIBLE);
+        } else if(total_num_waypoints == 4) {
+            ((Button) findViewById(R.id.button1) ).setVisibility(View.VISIBLE);
+            ((Button) findViewById(R.id.button2) ).setVisibility(View.VISIBLE);
+            ((Button) findViewById(R.id.button3) ).setVisibility(View.VISIBLE);
+            ((Button) findViewById(R.id.button4) ).setVisibility(View.VISIBLE);
+            ((Button) findViewById(R.id.button5) ).setVisibility(View.INVISIBLE);
+            ((Button) findViewById(R.id.button6) ).setVisibility(View.INVISIBLE);
+            ((Button) findViewById(R.id.button7) ).setVisibility(View.INVISIBLE);
+            ((Button) findViewById(R.id.button8) ).setVisibility(View.INVISIBLE);
+            ((Button) findViewById(R.id.button9) ).setVisibility(View.INVISIBLE);
+        } else if(total_num_waypoints == 5) {
+            ((Button) findViewById(R.id.button1) ).setVisibility(View.VISIBLE);
+            ((Button) findViewById(R.id.button2) ).setVisibility(View.VISIBLE);
+            ((Button) findViewById(R.id.button3) ).setVisibility(View.VISIBLE);
+            ((Button) findViewById(R.id.button4) ).setVisibility(View.VISIBLE);
+            ((Button) findViewById(R.id.button5) ).setVisibility(View.VISIBLE);
+            ((Button) findViewById(R.id.button6) ).setVisibility(View.INVISIBLE);
+            ((Button) findViewById(R.id.button7) ).setVisibility(View.INVISIBLE);
+            ((Button) findViewById(R.id.button8) ).setVisibility(View.INVISIBLE);
+            ((Button) findViewById(R.id.button9) ).setVisibility(View.INVISIBLE);
+        } else if(total_num_waypoints == 6) {
+            ((Button) findViewById(R.id.button1) ).setVisibility(View.VISIBLE);
+            ((Button) findViewById(R.id.button2) ).setVisibility(View.VISIBLE);
+            ((Button) findViewById(R.id.button3) ).setVisibility(View.VISIBLE);
+            ((Button) findViewById(R.id.button4) ).setVisibility(View.VISIBLE);
+            ((Button) findViewById(R.id.button5) ).setVisibility(View.VISIBLE);
+            ((Button) findViewById(R.id.button6) ).setVisibility(View.VISIBLE);
+            ((Button) findViewById(R.id.button7) ).setVisibility(View.INVISIBLE);
+            ((Button) findViewById(R.id.button8) ).setVisibility(View.INVISIBLE);
+            ((Button) findViewById(R.id.button9) ).setVisibility(View.INVISIBLE);
+        } else if(total_num_waypoints == 7) {
+            ((Button) findViewById(R.id.button1) ).setVisibility(View.VISIBLE);
+            ((Button) findViewById(R.id.button2) ).setVisibility(View.VISIBLE);
+            ((Button) findViewById(R.id.button3) ).setVisibility(View.VISIBLE);
+            ((Button) findViewById(R.id.button4) ).setVisibility(View.VISIBLE);
+            ((Button) findViewById(R.id.button5) ).setVisibility(View.VISIBLE);
+            ((Button) findViewById(R.id.button6) ).setVisibility(View.VISIBLE);
+            ((Button) findViewById(R.id.button7) ).setVisibility(View.VISIBLE);
+            ((Button) findViewById(R.id.button8) ).setVisibility(View.INVISIBLE);
+            ((Button) findViewById(R.id.button9) ).setVisibility(View.INVISIBLE);
+        } else if(total_num_waypoints == 8) {
+            ((Button) findViewById(R.id.button1) ).setVisibility(View.VISIBLE);
+            ((Button) findViewById(R.id.button2) ).setVisibility(View.VISIBLE);
+            ((Button) findViewById(R.id.button3) ).setVisibility(View.VISIBLE);
+            ((Button) findViewById(R.id.button4) ).setVisibility(View.VISIBLE);
+            ((Button) findViewById(R.id.button5) ).setVisibility(View.VISIBLE);
+            ((Button) findViewById(R.id.button6) ).setVisibility(View.VISIBLE);
+            ((Button) findViewById(R.id.button7) ).setVisibility(View.VISIBLE);
+            ((Button) findViewById(R.id.button8) ).setVisibility(View.VISIBLE);
+            ((Button) findViewById(R.id.button9) ).setVisibility(View.INVISIBLE);
+        } else if(total_num_waypoints == 9) {
+            ((Button) findViewById(R.id.button1) ).setVisibility(View.VISIBLE);
+            ((Button) findViewById(R.id.button2) ).setVisibility(View.VISIBLE);
+            ((Button) findViewById(R.id.button3) ).setVisibility(View.VISIBLE);
+            ((Button) findViewById(R.id.button4) ).setVisibility(View.VISIBLE);
+            ((Button) findViewById(R.id.button5) ).setVisibility(View.VISIBLE);
+            ((Button) findViewById(R.id.button6) ).setVisibility(View.VISIBLE);
+            ((Button) findViewById(R.id.button7) ).setVisibility(View.VISIBLE);
+            ((Button) findViewById(R.id.button8) ).setVisibility(View.VISIBLE);
+            ((Button) findViewById(R.id.button9) ).setVisibility(View.VISIBLE);
+        }
+
+
+    }
+
     private boolean parseWaypoints(Document doc) {
 
 
@@ -249,10 +363,14 @@ public class MainActivity extends ActionBarActivity implements CardReaderFragmen
         Node nNode = nList_root.item(0);
         NodeList nList = nNode.getChildNodes();
 
+        total_num_waypoints = nList.getLength()-1;
+
+
         int wp_count = 0;
         for (int i=0; i<nList.getLength(); i++) {
             Node n = nList.item(i);
-            if(n.getNodeName().equals("waypoint")) {
+            if(n.getNodeName().equals("waypoint"))
+            {
                 NodeList nList_pos = n.getChildNodes();
                 String x = null;
                 String y = null;
@@ -284,7 +402,7 @@ public class MainActivity extends ActionBarActivity implements CardReaderFragmen
                 }
 
                 //String line = String.format("Waypoint %d\n\t(x: %s, y: %s)\n\tAngle: (%s,%s,%s,%s)", wp_count, x,y,q1,q2,q3,q4);
-                String line = String.format("WAYPOINT %d\n\tX: %s\tY: %s", wp_count, x,y);
+                String line = String.format("WAYPOINT %d\n\tX: %s\tY: %s", wp_count+1, x,y);
                 stringList.add(line);
                 wp_count++;
             }
@@ -335,7 +453,9 @@ public class MainActivity extends ActionBarActivity implements CardReaderFragmen
         ListView listView = (ListView)findViewById(R.id.listView);
         listView.setAdapter(codeLearnArrayAdapter);
 
-        return false;
+
+
+        return true;
     }
 
     private boolean parseErrorMessage(Document doc) {
@@ -421,8 +541,10 @@ public class MainActivity extends ActionBarActivity implements CardReaderFragmen
         last_selected_waypoint = -1;
 
         EditText ipEditText= (EditText) findViewById(R.id.ip_editText);
-
         ipEditText.setText(IP_ADDRESS);
+
+        EditText portEditText = (EditText) findViewById(R.id.port_editText);
+        portEditText.setText(""+PORT);
 
 
         ipEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -453,6 +575,44 @@ public class MainActivity extends ActionBarActivity implements CardReaderFragmen
                 }
             }
         });
+
+
+
+
+        portEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_DONE) {
+                    // do your stuff here
+
+                    PORT = Integer.parseInt(v.getText().toString());
+
+
+                    SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+                    SharedPreferences.Editor editor = settings.edit();
+                    editor.putInt("port", PORT);
+                    editor.apply();
+
+                    tcp_client.changePort(PORT);
+
+                    tcp_client.disconnect();
+                }
+
+                return false;
+            }
+        });
+        portEditText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (!hasFocus) {
+                    hideSoftKeyboard(v);
+                }
+            }
+        });
+
+
+
+
 
         final ListView lv = (ListView) findViewById(R.id.listView);
         lv.setClickable(true);
@@ -496,16 +656,9 @@ public class MainActivity extends ActionBarActivity implements CardReaderFragmen
     public void onClickMainMenu () {
         Log.i(TAG,"onClickMainMenu");
         setContentView(R.layout.activity_main);
+        updateButtons();
     }
-    public void onClickStopRobot () {
-        sendStringTCP("s");
-    }
-    public void onClickBase () {
-        sendStringTCP("b");
-    }
-    public void onClickFollow () {
-        sendStringTCP("f");
-    }
+
 
     void setConnectButtonColor (final int color) {
 
@@ -585,36 +738,13 @@ public class MainActivity extends ActionBarActivity implements CardReaderFragmen
             case R.id.button9:
                 floorNum = 9;
                 break;
-            case R.id.button10:
-                floorNum = 10;
-                break;
-            case R.id.button11:
-                floorNum = 11;
-                break;
-            case R.id.button12:
-                floorNum = 12;
-                break;
-            case R.id.button13:
-                floorNum = 13;
-                break;
-            case R.id.button14:
-                floorNum = 14;
-                break;
-            case R.id.button15:
-                floorNum = 15;
-                break;
-            case R.id.button16:
-                floorNum = 16;
-                break;
             default:
                 floorNum = 0;
                 break;
         }
 
-
-
-        Intent intent = createElevatorIntent("Guest",floorNum, 4, getElevNum(floorNum), true);
-        last_elev_number = getElevNum(floorNum) - 1;
+        Intent intent = createElevatorIntent("Guest",floorNum, 4, floorNum, true);
+        last_elev_number = floorNum - 1;
         int requestCode = 1;
         startActivityForResult(intent, requestCode);
         overridePendingTransition(0,0);
@@ -623,10 +753,11 @@ public class MainActivity extends ActionBarActivity implements CardReaderFragmen
     protected void onActivityResult (int requestCode, int resultCode, Intent data) {
         // Collect data from the intent and use it
         if (resultCode == RESULT_CANCELED) {
-            Log.i(TAG,"RESULT_CANCELED");
+            //Log.i(TAG,"RESULT_CANCELED");
         } else if (resultCode == RESULT_OK) {
-            Log.i(TAG,"RESULT_OK");
-            sendStringTCP("g" + last_elev_number);
+            Log.i(TAG,"last_elev_number: "+last_elev_number);
+            //sendStringTCP("g" + last_elev_number);
+            onClickGuide(last_elev_number);
         }
     }
 
@@ -641,24 +772,11 @@ public class MainActivity extends ActionBarActivity implements CardReaderFragmen
         return intent;
     }
 
-    public int getElevNum(int floorNum) {
-        int elev_num;
-        if(floorNum >= 1 && floorNum <= 4) {
-            elev_num = 1;
-        } else if (floorNum >= 5 && floorNum <= 8) {
-            elev_num = 2;
-        } else if (floorNum >= 9 && floorNum <= 12) {
-            elev_num = 3;
-        } else {
-            elev_num = 4;
-        }
-        return elev_num;
-    }
 
     @Override
     public void nfcCallback(int floor, String name) {
         Log.i(TAG,"nfcCallback");
-        Intent intent = createElevatorIntent(name,floor, 3, getElevNum(floor) , false);
+        Intent intent = createElevatorIntent(name,floor, 3, floor , false);
         int requestCode = 1;
         startActivityForResult(intent, requestCode);
         overridePendingTransition(0,0);
@@ -706,12 +824,18 @@ public class MainActivity extends ActionBarActivity implements CardReaderFragmen
         Log.i(TAG,"deleteWaypointRow");
         XmlSerializer serializer = Xml.newSerializer();
         StringWriter writer = new StringWriter();
+
+        if(last_selected_waypoint < 0)
+        {
+            return;
+        }
+
         try {
             serializer.setOutput(writer);
             serializer.startDocument("UTF-8", true);
             serializer.startTag("", "Request");
             serializer.startTag("", "DeleteWaypointRow");
-            serializer.text("1");
+            serializer.text("" + last_selected_waypoint);
             serializer.endTag("", "DeleteWaypointRow");
             serializer.endTag("", "Request");
             serializer.endDocument();
@@ -756,9 +880,85 @@ public class MainActivity extends ActionBarActivity implements CardReaderFragmen
         }
     }
 
+    public void onClickStopRobot () {
+        //sendStringTCP("s");
 
+        //Log.i(TAG,"onClickStopRobot");
+        XmlSerializer serializer = Xml.newSerializer();
+        StringWriter writer = new StringWriter();
+        try {
+            serializer.setOutput(writer);
+            serializer.startDocument("UTF-8", true);
+            serializer.startTag("", "Action");
+            serializer.startTag("", "StopRobot");
+            serializer.text("");
+            serializer.endTag("", "StopRobot");
+            serializer.endTag("", "Action");
+            serializer.endDocument();
+            sendStringTCP(writer.toString());
+        } catch (Exception e) {
+            Log.e(TAG,"Error Creating XML");
+        }
+    }
+    public void onClickBase () {
+        //sendStringTCP("b");
 
+        //Log.i(TAG,"onClickStopRobot");
+        XmlSerializer serializer = Xml.newSerializer();
+        StringWriter writer = new StringWriter();
+        try {
+            serializer.setOutput(writer);
+            serializer.startDocument("UTF-8", true);
+            serializer.startTag("", "Action");
+            serializer.startTag("", "GoToBase");
+            serializer.text("");
+            serializer.endTag("", "GoToBase");
+            serializer.endTag("", "Action");
+            serializer.endDocument();
+            sendStringTCP(writer.toString());
+        } catch (Exception e) {
+            Log.e(TAG,"Error Creating XML");
+        }
+    }
 
+    public void onClickFollow () {
+        //sendStringTCP("f");
+
+        XmlSerializer serializer = Xml.newSerializer();
+        StringWriter writer = new StringWriter();
+        try {
+            serializer.setOutput(writer);
+            serializer.startDocument("UTF-8", true);
+            serializer.startTag("", "Action");
+            serializer.startTag("", "Follow");
+            serializer.text("");
+            serializer.endTag("", "Follow");
+            serializer.endTag("", "Action");
+            serializer.endDocument();
+            sendStringTCP(writer.toString());
+        } catch (Exception e) {
+            Log.e(TAG,"Error Creating XML");
+        }
+    }
+
+    public void onClickGuide(int target) {
+
+        XmlSerializer serializer = Xml.newSerializer();
+        StringWriter writer = new StringWriter();
+        try {
+            serializer.setOutput(writer);
+            serializer.startDocument("UTF-8", true);
+            serializer.startTag("", "Action");
+            serializer.startTag("", "GuideTo");
+            serializer.text("" + target);
+            serializer.endTag("", "GuideTo");
+            serializer.endTag("", "Action");
+            serializer.endDocument();
+            sendStringTCP(writer.toString());
+        } catch (Exception e) {
+            Log.e(TAG,"Error Creating XML");
+        }
+    }
 
 
 
