@@ -52,9 +52,26 @@ public class TCPClient implements Runnable{
     }
 
     public void sendMessage (String msg) {
+
+/*
+        //NEW
+        try {
+            out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
+        }
+        catch (Exception e)
+        {
+        }
+        ////
+*/
+
         if(out != null && !out.checkError()) {
-            out.print(msg);
+            out.println(msg);
             out.flush();
+
+            //NEW
+            //out.close();
+            //
+
             Log.d(TAG, "Sent Message: " + msg);
         }
     }
